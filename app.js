@@ -127,7 +127,7 @@ smallCrads.forEach((card)=>{
 
 
 window.addEventListener('scroll',()=>{
-    if(window.pageYOffset==0){
+    if (window.scrollY === 0) {
         cards.forEach((card)=>{
             card.classList.remove('appear');
         })
