@@ -1,0 +1,8 @@
+flask
+flask-cors
+flask-limiter
+langdetect
+numpy
+nltk
+keras
+autocorrect
