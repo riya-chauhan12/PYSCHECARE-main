@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD041 -->
 ## 📝 Summary
 <!-- Briefly explain what this PR does and WHY -->
 
@@ -19,7 +20,7 @@ Closes #
 
 ## 🔄 Type of Change
 <!-- Check all that apply -->
-- [ ] 🐛 Bug fix
+- [ ] 🐛 bugfix
 - [ ] ✨ New feature
 - [ ] 📚 Documentation update
 - [ ] ♻️ Code refactor
