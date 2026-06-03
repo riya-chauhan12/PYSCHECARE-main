@@ -159,10 +159,10 @@
             <p style="color: var(--dark-color); font-size: 0.9rem;">Create your account and begin your wellness journey</p>
         </div>
 
-        <form action="#" method="post" class="login-form">
+        <form action="signup.php" method="post" class="login-form">
             <div class="form-group">
-                <label for="fullname">Full Name</label>
-                <input type="text" id="fullname" name="fullname" required>
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
             </div>
 
             <div class="form-group">
@@ -173,21 +173,54 @@
             <div class="form-group">                    
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
-                
+                <p class="error-message" id="signup-error"></p>
             </div>
 
             <button type="submit" class="login-btn">Create Account</button>
             
             <div class="return-home">
-    <p>
-        Already have an account?
-        <a href="login.html">Log In</a>
-    </p>
-</div>
+                <p>
+                    Already have an account?
+                    <a href="login.html">Log In</a>
+                </p>
+                <p style="margin-top:10px;">
+                    <a href="index.html">Return to Home</a>
+                </p>
+            </div>
         </form>
     </div>
 
     <script src="otherJS/hamberger.js"></script>
-   
+    <script>
+        // Show error or success messages from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = document.getElementById('signup-error');
+        if (urlParams.has('error')) {
+            const err = urlParams.get('error');
+            errorMsg.style.display = 'block';
+            if (err === 'exists') {
+                errorMsg.textContent = 'Username already exists.';
+            } else if (err === 'db') {
+                errorMsg.textContent = 'Database error. Please try again.';
+            } else {
+                errorMsg.textContent = 'Sign up failed. Please try again.';
+            }
+        }
+    </script>
+    <script>
+        fetch('csrf.php')
+            .then(response => response.json())
+            .then(data => {
+                const forms = document.querySelectorAll('form');
+                forms.forEach(form => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = data.csrf_token;
+                    form.appendChild(input);
+                });
+            })
+            .catch(error => console.error('Error fetching CSRF token:', error));
+    </script>
 </body>
 </html>
