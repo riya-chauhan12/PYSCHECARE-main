@@ -1,0 +1,173 @@
+name: 🏆 GSSoC Score Calculator
+
+on:
+  pull_request_target:
+    types: [labeled, unlabeled, opened, reopened, synchronize]
+
+jobs:
+  calculate-score:
+    name: Calculate & Post GSSoC Score
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Calculate Score and Post Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // ================================================================
+            //  PSYCHECARE — GSSoC PR SCORE CALCULATOR
+            //
+            //  Formula: Score = 50 (base) + (difficulty × quality) + type_bonus
+            //
+            //  Difficulty (required, pick one):
+            //    level:beginner      → 25 pts
+            //    level:intermediate  → 50 pts
+            //    level:advanced      → 75 pts
+            //    level:critical      → 100 pts
+            //
+            //  Quality (optional multiplier):
+            //    quality:clean       → ×1.15
+            //    quality:exceptional → ×1.30
+            //
+            //  Type bonus (stackable):
+            //    each type:* label   → +5 pts
+            //
+            //  Base: gssoc:approved  → +50 pts (required)
+            // ================================================================
+
+            const PR_NUMBER  = context.payload.pull_request.number;
+            const OWNER      = context.repo.owner;
+            const REPO       = context.repo.repo;
+            const BOT_MARKER = '<!-- gssoc-score-calculator -->';
+
+            // ── STEP 1: Fetch current labels on this PR ───────────────────
+            const prResp = await github.rest.pulls.get({
+              owner: OWNER, repo: REPO, pull_number: PR_NUMBER
+            });
+            const labels = prResp.data.labels.map(l => l.name);
+            const pr     = prResp.data;
+
+            // ── STEP 2: Detect mentor:username labels ─────────────────────
+            const mentorLabels = labels.filter(l => l.startsWith('mentor:'));
+            const mentors      = mentorLabels.map(l => `@${l.replace('mentor:', '')}`);
+
+            // ── STEP 3: Scoring logic ─────────────────────────────────────
+
+            // Base points (requires gssoc:approved)
+            const isApproved   = labels.includes('gssoc:approved');
+            const BASE_POINTS  = isApproved ? 50 : 0;
+
+            // Difficulty points (pick one)
+            const DIFFICULTY_MAP = {
+              'level:beginner':     25,
+              'level:intermediate': 50,
+              'level:advanced':     75,
+              'level:critical':     100
+            };
+            const diffLabel = labels.find(l => Object.keys(DIFFICULTY_MAP).includes(l));
+            const diffPts   = diffLabel ? DIFFICULTY_MAP[diffLabel] : 0;
+
+            // Quality multiplier (pick at most one)
+            const QUALITY_MAP = {
+              'quality:clean':       1.15,
+              'quality:exceptional': 1.30
+            };
+            const qualLabel  = labels.find(l => Object.keys(QUALITY_MAP).includes(l));
+            const qualMult   = qualLabel ? QUALITY_MAP[qualLabel] : 1.0;
+            const qualDisplay = qualLabel
+              ? `${qualLabel} (×${qualMult.toFixed(2)})`
+              : 'None (×1.00)';
+
+            // Type bonus (stackable, +5 each)
+            const TYPE_PREFIX  = 'type:';
+            const typeLabels   = labels.filter(l => l.startsWith(TYPE_PREFIX));
+            const TYPE_BONUS   = typeLabels.length * 5;
+
+            // ── STEP 4: Final score calculation ───────────────────────────
+            const diffAfterQuality = Math.round(diffPts * qualMult);
+            const TOTAL_SCORE      = BASE_POINTS + diffAfterQuality + TYPE_BONUS;
+
+            // ── STEP 5: Validation flags ──────────────────────────────────
+            const missingApproved   = !isApproved;
+            const missingDifficulty = !diffLabel;
+            const multipleDifficulty = labels.filter(l =>
+              Object.keys(DIFFICULTY_MAP).includes(l)).length > 1;
+
+            // ── STEP 6: Build the comment body ────────────────────────────
+            let statusBlock = '';
+
+            if (missingApproved) {
+              statusBlock += `> ⛔ **\`gssoc:approved\` is missing** — this PR will **not count** toward the leaderboard until a maintainer adds it.\n\n`;
+            }
+            if (missingDifficulty) {
+              statusBlock += `> ⚠️ **No difficulty label found** — a \`level:*\` label is **required**. Ask a maintainer to assign one.\n\n`;
+            }
+            if (multipleDifficulty) {
+              statusBlock += `> ⚠️ **Multiple difficulty labels detected** — only **one** should be applied.\n\n`;
+            }
+
+            const typeRows = typeLabels.length > 0
+              ? typeLabels.map(t => `| \`${t}\` | +5 pts |`).join('\n')
+              : '| *(none)* | +0 pts |';
+
+            const mentorLine = mentors.length > 0
+              ? `\n---\n\n👨‍🏫 **Reviewed by mentor:** ${mentors.join(', ')}`
+              : '';
+
+            const scoreEmoji = TOTAL_SCORE >= 150 ? '🏆' :
+                               TOTAL_SCORE >= 100 ? '🥇' :
+                               TOTAL_SCORE >= 60  ? '🥈' : '🥉';
+
+            const comment = `${BOT_MARKER}
+## ${scoreEmoji} GSSoC Score Summary
+
+${statusBlock}### 📊 Score Breakdown
+
+| Component | Label | Value |
+|-----------|-------|-------|
+| Base | \`gssoc:approved\` | ${isApproved ? '+50 pts ✅' : '+0 pts ⛔ missing'} |
+| Difficulty | ${diffLabel ? `\`${diffLabel}\`` : '*(missing)*'} | ${diffPts > 0 ? `${diffPts} pts` : '0 pts ⚠️'} |
+| Quality | ${qualLabel ? `\`${qualLabel}\`` : '*(none)*'} | ×${qualMult.toFixed(2)} |
+| Difficulty × Quality | | **${diffAfterQuality} pts** |
+${typeRows}
+| Type Bonus Total | ${typeLabels.length} label(s) × 5 | **+${TYPE_BONUS} pts** |
+
+---
+
+### 🧮 Formula
+
+\`\`\`
+Score = ${BASE_POINTS} (base) + ${diffAfterQuality} (difficulty × quality) + ${TYPE_BONUS} (type bonus)
+      = ${TOTAL_SCORE} pts
+\`\`\`
+
+## 💯 Total Score: **${TOTAL_SCORE} pts**${mentorLine}
+
+---
+<sub>🤖 Auto-calculated by the GSSoC Score Bot · Updates on every label change</sub>`;
+
+            // ── STEP 7: Find existing bot comment and update or create ─────
+            const comments = await github.rest.issues.listComments({
+              owner: OWNER, repo: REPO, issue_number: PR_NUMBER, per_page: 100
+            });
+
+            const existing = comments.data.find(c => c.body.includes(BOT_MARKER));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: OWNER, repo: REPO,
+                comment_id: existing.id,
+                body: comment
+              });
+              console.log(`Updated existing score comment (ID: ${existing.id})`);
+            } else {
+              await github.rest.issues.createComment({
+                owner: OWNER, repo: REPO,
+                issue_number: PR_NUMBER,
+                body: comment
+              });
+              console.log('Created new score comment');
+            }
