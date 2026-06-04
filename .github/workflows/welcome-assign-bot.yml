@@ -58,7 +58,7 @@ jobs:
                 issue_number: issueNumber
               });
               
-              // If the issue is already assigned to someone else (optional protection)
+              // If the issue is already assigned to someone else
               if (issue.assignees && issue.assignees.length > 0 && !issue.assignees.find(a => a.login === user)) {
                  const currentAssignees = issue.assignees.map(a => '@' + a.login).join(', ');
                  await github.rest.issues.createComment({
@@ -69,6 +69,37 @@ jobs:
                  });
                  return;
               }
+              
+              // --- MAX 3 ISSUES ENFORCER ---
+              // Check if user is a maintainer to bypass limit
+              let isMaintainer = false;
+              try {
+                const { data: permData } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner, repo, username: user
+                });
+                if (['admin', 'write'].includes(permData.permission)) {
+                  isMaintainer = true;
+                }
+              } catch (e) {}
+
+              if (!isMaintainer) {
+                // Fetch open issues currently assigned to this user
+                const { data: userIssues } = await github.rest.issues.listForRepo({
+                  owner, repo, assignee: user, state: 'open'
+                });
+                const actualIssues = userIssues.filter(i => !i.pull_request);
+                
+                if (actualIssues.length >= 3) {
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issueNumber,
+                    body: `👋 Hey @${user}! We love your enthusiasm, but you are already assigned to ${actualIssues.length} other open issues.\n\nTo ensure everyone gets a fair chance to contribute, we have a strict **Max 3 Open Issues** limit per contributor. Please complete and merge one of your existing assigned issues before claiming a new one! 🚀`
+                  });
+                  return; // Stop the assignment process
+                }
+              }
+              // ------------------------------
               
               console.log(`Assigning @${user} to issue #${issueNumber}...`);
               
