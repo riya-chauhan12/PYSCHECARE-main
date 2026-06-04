@@ -44,8 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Hash password securely
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        // Hash password securely with explicit cost to match login script
+        $password_hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 
         // Insert new user
         $stmt = $db->prepare(
