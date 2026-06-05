@@ -539,6 +539,7 @@
         function setupChatForm() {
             const msgerForm = document.querySelector(".msger-inputarea");
             const msgerInput = document.querySelector(".msger-input");
+            const msgerSendBtn = document.querySelector(".msger-send-btn");
 
             if (msgerForm) {
                 msgerForm.addEventListener("submit", async event => {
@@ -639,6 +640,13 @@
             }
         }
 
+        function enableInputs() {
+            const msgerInput = document.querySelector(".msger-input");
+            const msgerSendBtn = document.querySelector(".msger-send-btn");
+            if (msgerInput) msgerInput.disabled = false;
+            if (msgerSendBtn) msgerSendBtn.disabled = false;
+        }
+
         async function fetchBotResponse(userText) {
             try {
                 // Dynamically resolve API URL for production vs local development
@@ -665,6 +673,7 @@
                 
                 // Add the bot's response to the chat
                 appendMessage("Arya Assistant", BOT_IMG, "left", data.response);
+                enableInputs();
                 
             } catch (error) {
                 console.warn('Flask server not available. Using local keyword fallback...', error);
@@ -691,6 +700,7 @@
                     
                     // Add the bot's response to the chat
                     appendMessage("Arya Assistant", BOT_IMG, "left", response);
+                    enableInputs();
                 }, 1000);
             }
         }

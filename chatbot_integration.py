@@ -179,8 +179,9 @@ def get_chatbot_response(message, user_id="000"):
                                 for tg in intents["intents"]:
                                     if (
                                         "context_set" in tg
-                                        and tg["context_set"] == context[user_id] = {"value": intent["context_set"], "timestamp": time.time()}
+                                        and tg["context_set"] == context[user_id]["value"]
                                     ):
+                                        context[user_id] = {"value": intent.get("context_set", ""), "timestamp": time.time()}
                                         response = random.choice(tg["responses"])
                                         return str(response)
                             else:
