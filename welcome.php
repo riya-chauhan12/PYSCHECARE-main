@@ -112,7 +112,7 @@ if (!isset($_SESSION["username"])) {
                     <li><a href="otherHTML/chatBot.html">CHAT BOT</a></li>
                     <li><a href="otherHTML/statistics.html">STATISTICS</a></li>
                     <li><a href="contact.html">CONTACT</a></li>
-                    <li><a href="login.html">LOGIN</a></li>
+                    <li><a href="logout.php">LOGOUT</a></li>
                 </ul>
             </div>
         </div>
