@@ -22,6 +22,10 @@ jobs:
             // ================================================================
             //  PSYCHECARE — SPAM / LOW-EFFORT PR DETECTOR
             //
+            //  Exemptions (always skip):
+            //    • Bot accounts (login ending in "[bot]")
+            //    • Collaborators with admin or write permission
+            //
             //  Flags or closes PRs that match ANY of these conditions:
             //
             //  CONDITION A — Tiny diff + advanced claim
@@ -45,6 +49,28 @@ jobs:
             const repo   = context.repo.repo;
             const prNum  = context.payload.pull_request.number;
             const author = context.payload.pull_request.user.login;
+
+            // ── 0. Exemptions — skip bots and maintainers ─────────────────
+
+            // Skip verified bot accounts (dependabot[bot], renovate[bot], etc.)
+            if (author.endsWith('[bot]')) {
+              console.log(`Skipping spam check — @${author} is a bot account.`);
+              return;
+            }
+
+            // Skip collaborators with admin or write access
+            try {
+              const { data: permData } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner, repo, username: author
+              });
+              if (['admin', 'write'].includes(permData.permission)) {
+                console.log(`Skipping spam check — @${author} is a maintainer (${permData.permission}).`);
+                return;
+              }
+            } catch (e) {
+              // User is not a collaborator at all — continue with checks
+              console.log(`@${author} is not a collaborator, proceeding with spam checks.`);
+            }
 
             // ── 1. Ensure required labels exist ──────────────────────────
             const requiredLabels = [
@@ -107,9 +133,9 @@ jobs:
             const prBody = (context.payload.pull_request.body || '').trim();
             const condC  = prBody.length < 20;
 
-            console.log(`Condition A (tiny+advanced)         : ${condA}`);
-            console.log(`Condition B (readme-only, no docs)  : ${condB}`);
-            console.log(`Condition C (empty description)     : ${condC} — body length: ${prBody.length}`);
+            console.log(`Condition A (tiny+advanced)        : ${condA}`);
+            console.log(`Condition B (readme-only, no docs) : ${condB}`);
+            console.log(`Condition C (empty description)    : ${condC} — body length: ${prBody.length}`);
 
             // ── 5. PR passes all checks ───────────────────────────────────
             if (!condA && !condB && !condC) {
