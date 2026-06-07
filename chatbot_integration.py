@@ -3,6 +3,8 @@ import logging
 import os
 import random
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Dict
 
@@ -41,23 +43,41 @@ words = []
 classes = []
 model = None
 intents = {}
-import time
-context: dict = {}
-CONTEXT_TTL = 1800  # 30 minutes
+# ── Thread-safe context store ─────────────────────────────────────────────────────
+# Flask runs each request in a separate thread. Without a lock, concurrent
+# requests can corrupt the context dict or raise:
+#   RuntimeError: dictionary changed size during iteration
+# All reads AND writes to `context` must be done while holding _context_lock.
+_context_lock: threading.Lock = threading.Lock()
+context: Dict[str, dict] = {}
+CONTEXT_TTL = 1800  # seconds (30 minutes)
+MAX_CONTEXT_SIZE = 1000  # hard cap — evict oldest entries beyond this
 
-def _clean_context():
-    """Remove context entries older than TTL and enforce a hard size cap."""
+
+def _clean_context() -> None:
+    """Remove stale context entries and enforce a hard size cap.
+
+    Must be called while NOT holding _context_lock — it acquires the lock
+    internally so callers don't need to worry about it.
+    """
     now = time.time()
-    expired = [uid for uid, val in context.items() if now - val.get("timestamp", 0) > CONTEXT_TTL]
-    for uid in expired:
-        del context[uid]
+    with _context_lock:
+        # Collect expired keys first, then delete — never mutate during iteration
+        expired = [
+            uid for uid, val in context.items()
+            if now - val.get("timestamp", 0) > CONTEXT_TTL
+        ]
+        for uid in expired:
+            context.pop(uid, None)  # pop is safe even if key was already removed
 
-    # Hard cap: if context exceeds 1000 entries after TTL sweep, evict the oldest
-    MAX_CONTEXT_SIZE = 1000
-    if len(context) > MAX_CONTEXT_SIZE:
-        oldest = sorted(context.items(), key=lambda x: x[1].get("timestamp", 0))
-        for uid, _ in oldest[:len(context) - MAX_CONTEXT_SIZE]:
-            del context[uid]
+        # Hard cap: evict oldest entries if dict still exceeds MAX_CONTEXT_SIZE
+        if len(context) > MAX_CONTEXT_SIZE:
+            overflow = len(context) - MAX_CONTEXT_SIZE
+            oldest_keys = sorted(
+                context, key=lambda uid: context[uid].get("timestamp", 0)
+            )[:overflow]
+            for uid in oldest_keys:
+                context.pop(uid, None)
 
 def load_chatbot_model():
     """
@@ -185,20 +205,33 @@ def get_chatbot_response(message, user_id="000"):
                 for intent in intents["intents"]:  # loop through intents
                     if intent["tag"] == results[0][0]:  # if tag matches
                         if intent["tag"].lower() == "reiterate":  # if tag is reiterate
-                            if context.get(user_id, {}).get("value") :  # if context exists
+                            # ── Thread-safe context read ───────────────────────────────
+                            with _context_lock:
+                                user_ctx = context.get(user_id, {})
+                            if user_ctx.get("value"):
                                 for tg in intents["intents"]:
                                     if (
                                         "context_set" in tg
-                                        and tg["context_set"] == context[user_id]["value"]
+                                        and tg["context_set"] == user_ctx["value"]
                                     ):
-                                        context[user_id] = {"value": intent.get("context_set", ""), "timestamp": time.time()}
+                                        # ── Thread-safe context write ───────────────────────
+                                        with _context_lock:
+                                            context[user_id] = {
+                                                "value": intent.get("context_set", ""),
+                                                "timestamp": time.time()
+                                            }
                                         response = random.choice(tg["responses"])
                                         return str(response)
                             else:
                                 response = random.choice(intent["responses"])
                                 return str(response)
                         if "context_set" in intent and intent["context_set"] != "":
-                            context[user_id] = {"value": intent["context_set"], "timestamp": time.time()}
+                            # ── Thread-safe context write ────────────────────────────
+                            with _context_lock:
+                                context[user_id] = {
+                                    "value": intent["context_set"],
+                                    "timestamp": time.time()
+                                }
                         response = random.choice(intent["responses"])
                         return str(response)
                 results.pop(0)
