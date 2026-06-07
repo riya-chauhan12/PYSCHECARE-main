@@ -41,9 +41,6 @@ jobs:
             //  CONDITION C — Empty or missing PR description
             //    • PR body is empty or shorter than 20 characters.
             //
-            //  CONDITION C — Empty or missing PR description
-            //    • PR body is empty or shorter than 20 characters.
-            //
             //  ACTION:
             //    • First offence        → add "spam" label + warning comment
             //    • Spam label present   → close PR + comment
@@ -203,13 +200,6 @@ jobs:
                 `(**${prBody.length} character(s)**). Please describe what changes you made and why. ` +
                 `A good description helps maintainers understand and review your work faster.`
               );
-            if (condC)
-              reasons.push(
-                `- **Missing or empty PR description**: Your PR description is too short ` +
-                `(**${prBody.length} character(s)**). Please describe what changes you made and why. ` +
-                `A good description helps maintainers understand and review your work faster.`
-              );
-
             const reasonBlock = reasons.join('\n');
 
             // ── 7. First offence → warn; repeat offence → close ──────────
