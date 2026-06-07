@@ -17,6 +17,20 @@
     <script src="../library/p5.speech.js"></script>
     <script src="https://unpkg.com/rivescript@latest/dist/rivescript.min.js"></script>
     
+    <!-- ── Auth Guard ─────────────────────────────────────────────────────────
+         If this page is opened directly (not via chatBot.php), window.PSYCHECARE_TOKEN
+         will be undefined. We redirect immediately to the PHP gateway which
+         performs the real session check.
+    ──────────────────────────────────────────────────────────────────────── -->
+    <script>
+        (function () {
+            if (typeof window.PSYCHECARE_TOKEN === 'undefined') {
+                // Not served through chatBot.php — redirect to the PHP gateway
+                window.location.replace('chatBot.php');
+            }
+        })();
+    </script>
+
     <!-- Add these styles for the typing indicator -->
     <style>
         .typing {
@@ -72,7 +86,7 @@
             <div class="nav-list-cont">
                 <ul class="nav-ul">
                     <li><a href="../index.html">HOME</a></li>
-                    <li><a href="chatBot.html" class="active">CHAT BOT</a></li>
+                    <li><a href="chatBot.php" class="active">CHAT BOT</a></li>
                     <li><a href="statistics.html">STATISTICS</a></li>
                     <li><a href="../contact.html">CONTACT</a></li>
                     <li><a href="../login.html">LOGIN</a></li>
@@ -99,7 +113,7 @@
         <div class="mobile-view-nav-list">
             <ul>
                 <li><a href="../index.html" class="mobile-view-list">HOME</a></li>
-                <li><a href="chatBot.html" class="mobile-view-list active">CHAT BOT</a></li>
+                <li><a href="chatBot.php" class="mobile-view-list active">CHAT BOT</a></li>
                 <li><a href="statistics.html" class="mobile-view-list">STATISTICS</a></li>
                 <li><a href="../contact.html" class="mobile-view-list">CONTACT</a></li>
                 <li><a href="../login.html" class="mobile-view-list">LOGIN</a></li>
@@ -667,6 +681,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        // Send the HMAC token injected by chatBot.php for API authentication
+                        'Authorization': `Bearer ${window.PSYCHECARE_TOKEN || ''}`
                     },
                     // Send stored session_id so bot remembers conversation context
                     body: JSON.stringify({
