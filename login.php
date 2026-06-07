@@ -26,33 +26,50 @@ if ($username === "" || $password === "") {
 }
 
 try {
-    $db = getAuthDatabase();
-    $ip = getIPAddress();
+    $db  = getAuthDatabase();
+    $ip  = getIPAddress();
     $rateKey = "login:" . $ip;
 
-    // Check rate limit: 5 attempts per 15 minutes
+    // ── Layer 1: IP-based rate limit (5 attempts per 15 min per IP) ───────────
     if (!checkRateLimit($db, $rateKey, 5, 900)) {
         header("Location: login.html?error=rate_limit");
         exit();
     }
 
+    // Fetch user record
     $stmt = $db->prepare(
         "SELECT id, username, password_hash FROM users WHERE username = :username"
     );
     $stmt->execute([':username' => $username]);
     $user = $stmt->fetch();
 
+    // ── Layer 2: Per-account lockout (5 failed attempts → 15 min lock) ───────
+    // Check BEFORE password_verify so locked accounts get no timing hint.
+    if ($user && isAccountLocked($db, $user['id'])) {
+        $remaining = max(0, getAccountLockExpiry($db, $user['id']) - time());
+        $minutes   = (int) ceil($remaining / 60);
+        header("Location: login.html?error=locked&minutes=" . $minutes);
+        exit();
+    }
+
+    // ── Verify password ───────────────────────────────────────────────────────
     if ($user && password_verify($password, $user['password_hash'])) {
+        // Success — clear all lockout state and regenerate session
+        clearAccountLock($db, $user['id']);
         resetAttempts($db, $rateKey);
         session_regenerate_id(true);
-        $_SESSION["user_id"] = $user["id"];
+        $_SESSION["user_id"]  = $user["id"];
         $_SESSION["username"] = $user["username"];
         header("Location: welcome.php");
         exit();
     }
 
-    // Record failed attempt
-    incrementAttempts($db, $rateKey);
+    // ── Record failure ────────────────────────────────────────────────────────
+    incrementAttempts($db, $rateKey);              // IP counter
+    if ($user) {
+        incrementAccountAttempts($db, $user['id']); // Account counter
+    }
+
 } catch (PDOException $e) {
     header("Location: login.html?error=db");
     exit();
