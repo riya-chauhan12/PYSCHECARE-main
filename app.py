@@ -15,6 +15,15 @@ if not ALLOWED_ORIGIN:
     raise ValueError("CRITICAL: ALLOWED_ORIGIN environment variable is not set! Refusing to start with insecure CORS.")
 CORS(app, origins=[ALLOWED_ORIGIN])
 
+@app.before_request
+def verify_origin():
+    """Harden CORS by rejecting requests missing or disallowed Origin header."""
+    origin = request.headers.get("Origin")
+    if not origin:
+        return jsonify({"error": "Missing Origin header"}), 403
+    if origin != ALLOWED_ORIGIN:
+        return jsonify({"error": "Origin not allowed"}), 403
+
 # ── Rate limiting ────────────────────────────────────────────────────────────
 limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])
 
