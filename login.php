@@ -30,8 +30,8 @@ try {
     $ip = getIPAddress();
     $rateKey = "login:" . $ip;
 
-    // Check rate limit: 5 attempts per 15 minutes
-    if (!checkRateLimit($db, $rateKey, 5, 900)) {
+    // Check AND Increment atomically: 5 attempts per 15 minutes
+    if (!enforceRateLimit($db, $rateKey, 5, 900)) {
         header("Location: login.html?error=rate_limit");
         exit();
     }
@@ -51,8 +51,8 @@ try {
         exit();
     }
 
-    // Record failed attempt
-    incrementAttempts($db, $rateKey);
+    // Failed attempt is already recorded atomically by enforceRateLimit.
+    // If we reach here, it's just a regular invalid password.
 } catch (PDOException $e) {
     header("Location: login.html?error=db");
     exit();
