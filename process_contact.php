@@ -1,24 +1,46 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = htmlspecialchars($_POST['name']);
-    $email = htmlspecialchars($_POST['email']);
-    $subject = htmlspecialchars($_POST['subject']);
-    $message = htmlspecialchars($_POST['message']);
+require_once __DIR__ . '/session_config.php';
+session_start();
 
-    $to = "support@psychecare.com"; 
-    $headers = "From: " . $email . "\r\n";
-    $headers .= "Reply-To: " . $email . "\r\n";
-    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
-    $email_body = "<h2>New Contact Message</h2>
-                   <p><strong>Name:</strong> {$name}</p>
-                   <p><strong>Email:</strong> {$email}</p>
-                   <p><strong>Message:</strong><br/>" . nl2br($message) . "</p>";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if(mail($to, $subject, $email_body, $headers)) {
-        echo "<script>alert('Message sent successfully!'); window.location.href='index.html';</script>";
-    } else {
-        echo "<script>alert('Failed to send message. Please try again.'); window.history.back();</script>";
+    // Validate CSRF token
+    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        http_response_code(403);
+        die("Invalid CSRF token.");
+    }
+
+    $name    = htmlspecialchars(trim($_POST['name'] ?? ''));
+    $email   = htmlspecialchars(trim($_POST['email'] ?? ''));
+    $message = htmlspecialchars(trim($_POST['message'] ?? ''));
+
+    if (!$name || !$email || !$message) {
+        die("All fields are required.");
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        die("Invalid email address.");
+    }
+
+    try {
+        require_once __DIR__ . '/database.php';
+        $db = getAuthDatabase();
+
+        $stmt = $db->prepare("INSERT INTO contact_messages (name, email, message) VALUES (:name, :email, :message)");
+        $stmt->execute([
+            ':name' => $name,
+            ':email' => $email,
+            ':message' => $message
+        ]);
+
+        echo "Message received. Thank you, $name!";
+    } catch (PDOException $e) {
+        http_response_code(500);
+        die("Database error. Please try again later.");
     }
 }
 ?>

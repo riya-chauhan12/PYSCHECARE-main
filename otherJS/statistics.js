@@ -75,7 +75,7 @@ for(let i=0;i<data.length;i++){
 
     let option=document.createElement('option');
 
-    option.innerHTML=data[i]['label'];
+    option.textContent=data[i]['label'];
 
     option.setAttribute('value',`${data[i]['label']}`);
 
@@ -141,6 +141,7 @@ function addCountry(countryName){
     if(nameOfTheSelectedCountry!="none"){
      
         updateChart(nameOfTheSelectedCountry);
+        countryName.value = "none";
     }
 
 }
