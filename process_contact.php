@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo "Message received. Thank you, " . htmlspecialchars($name, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "!";
     } catch (PDOException $e) {
         http_response_code(500);
-        die("Database error. Please try again later.");
+        echo json_encode(['success' => false, 'error' => 'Database error. Please try again later.']);
     }
 }
 ?>
