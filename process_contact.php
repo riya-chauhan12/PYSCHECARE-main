@@ -43,11 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die("Invalid email address.");
     }
 
-    $name = htmlspecialchars($name);
-    $email = htmlspecialchars($email);
-    $subject = htmlspecialchars($subject);
-    $message = htmlspecialchars($message);
-
     try {
         require_once __DIR__ . '/database.php';
         $db = getAuthDatabase();
@@ -60,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':message' => $message
         ]);
 
-        echo "Message received. Thank you, $name!";
+        echo "Message received. Thank you, " . htmlspecialchars($name, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "!";
     } catch (PDOException $e) {
         http_response_code(500);
         die("Database error. Please try again later.");
