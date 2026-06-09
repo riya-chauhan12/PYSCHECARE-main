@@ -8,6 +8,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from chatbot_integration import get_chatbot_response
 from validation import validate_chat_payload
+from crisis_detection import detect_crisis_risk, log_crisis_event
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024
@@ -74,8 +75,11 @@ def chat():
     if validation_error:
         return jsonify({"error": validation_error}), 400
 
+    risk = detect_crisis_risk(data["message"])
+    log_crisis_event(risk, user_id)
+
     response = get_chatbot_response(data["message"], user_id)
-    return jsonify({"response": response, "session_id": user_id})
+    return jsonify({"response": response, "session_id": user_id, "risk": risk})
 
 
 @app.errorhandler(413)

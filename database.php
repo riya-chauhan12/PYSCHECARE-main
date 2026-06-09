@@ -49,15 +49,7 @@ function getAuthDatabase(): PDO
 
 function getIPAddress(): string
 {
-    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-        return $_SERVER['HTTP_CLIENT_IP'];
-    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        // X-Forwarded-For can contain multiple IPs, the first one is the client
-        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        return trim($ips[0]);
-    } else {
-        return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    }
+    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
 function enforceRateLimit(PDO $db, string $key, int $maxAttempts, int $windowSeconds): bool
