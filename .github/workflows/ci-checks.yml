@@ -22,6 +22,7 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SQLFLUFF_DIALECT: sqlite
           # You can disable specific linters if they are too strict:
           VALIDATE_JSCPD: false
           VALIDATE_PHP_PSALM: false
