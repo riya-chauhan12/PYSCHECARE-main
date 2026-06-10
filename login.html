@@ -201,6 +201,9 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
                 <p class="error-message" id="login-error">Invalid username or password</p>
+                <div style="text-align: right; margin-top: 0.35rem;">
+                    <a href="forgot_password.html" style="color: var(--primary-color); font-size: 0.85rem; text-decoration: none;">Forgot Password?</a>
+                </div>
             </div>
 
             <button type="submit" class="login-btn">Log In</button>
@@ -253,6 +256,15 @@
         if (urlParams.get('logged_out') === '1') {
             const toast = document.getElementById('logout-toast');
             if (toast) toast.style.display = 'block';
+        }
+
+        // Show password reset success toast
+        if (urlParams.get('password_reset') === '1') {
+            const toast = document.getElementById('logout-toast');
+            if (toast) {
+                toast.textContent = 'Your password has been reset successfully. Please log in.';
+                toast.style.display = 'block';
+            }
         }
     </script>
     <script>
