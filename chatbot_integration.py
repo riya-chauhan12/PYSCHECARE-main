@@ -282,5 +282,3 @@ def detect_language(text):
     except LangDetectException:
         return "en"
 
-# Initialize the chatbot model when this module is imported
-load_chatbot_model()
