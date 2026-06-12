@@ -117,6 +117,20 @@ cd PYSCHECARE
 pip install -r requirements.txt
 ```
 
+### Configure Environment Variables
+
+The server requires environment variables to start. Create a `.env` file in the root directory by copying `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+Make sure the following variables are defined in `.env`:
+*   `ALLOWED_ORIGIN`: The origin allowed to connect via CORS (e.g., `http://localhost`).
+*   `CHAT_API_SECRET`: A secure random secret key used for signing chat session tokens.
+
+> ⚠️ **IMPORTANT**: The Flask server will raise a fatal `ValueError` and refuse to start if `ALLOWED_ORIGIN` is not set.
+
 ### Start Application
 
 ```bash
