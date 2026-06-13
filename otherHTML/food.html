@@ -12,18 +12,6 @@
 
     <link rel="stylesheet" href="../otherStylesheet/common.css">
     <link rel="stylesheet" href="../otherStylesheet/food.css">
-
-    <!-- Dark mode bootstrap: Apply theme before first paint to prevent flash -->
-    <script>
-        (function() {
-            const isDarkMode = localStorage.getItem('darkMode') === 'enabled' || 
-                               (localStorage.getItem('darkMode') === null && 
-                                window.matchMedia('(prefers-color-scheme: dark)').matches);
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-            }
-        })();
-    </script>
 </head>
 <body>
 <script>
