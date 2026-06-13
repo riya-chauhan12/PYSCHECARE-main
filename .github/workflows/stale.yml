@@ -5,6 +5,11 @@ on:
     - cron: '0 0 * * *' # Runs daily at midnight UTC
   workflow_dispatch: # Allow manual trigger for testing
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
 jobs:
   stale:
     name: Mark and Close Stale Issues & PRs
@@ -72,3 +77,4 @@ jobs:
 
           # Limit operations per run to avoid hitting API rate limits
           operations-per-run: 100
+
