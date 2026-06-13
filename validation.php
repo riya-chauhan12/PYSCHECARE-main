@@ -57,16 +57,22 @@ function validateSignupInput(string $username, string $email, string $password):
     return null;
 }
 
-function validateContactInput(string $name, string $email, string $message): ?string
+const MAX_SUBJECT_LENGTH = 255;
+
+function validateContactInput(string $name, string $email, string $subject, string $message): ?string
 {
     if (!isRequired($name) || !isMaxLength($name, MAX_NAME_LENGTH)) {
-        return 'Please enter your name.';
+        return 'Please enter your name under ' . MAX_NAME_LENGTH . ' characters.';
     }
     if (!isValidEmailInput($email)) {
         return 'Please enter a valid email address.';
+    }
+    if (!isRequired($subject) || !isMaxLength($subject, MAX_SUBJECT_LENGTH)) {
+        return 'Please enter a subject under ' . MAX_SUBJECT_LENGTH . ' characters.';
     }
     if (!isValidMessage($message)) {
         return 'Please enter a message under ' . MAX_MESSAGE_LENGTH . ' characters.';
     }
     return null;
 }
+
