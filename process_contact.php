@@ -20,34 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject = trim($_POST['subject'] ?? '');
     $message = trim($_POST['message'] ?? '');
 
-    if (!$name || !$email || !$subject || !$message) {
+    $error = validateContactInput($name, $email, $subject, $message);
+    if ($error !== null) {
         http_response_code(400);
-        die("All fields are required.");
-    }
-
-    if (strlen($name) > 100) {
-        http_response_code(400);
-        die("Name must not exceed 100 characters.");
-    }
-
-    if (strlen($email) > 255) {
-        http_response_code(400);
-        die("Email must not exceed 255 characters.");
-    }
-
-    if (strlen($subject) > 255) {
-        http_response_code(400);
-        die("Subject must not exceed 255 characters.");
-    }
-
-    if (strlen($message) > 1000) {
-        http_response_code(400);
-        die("Message must not exceed 1000 characters.");
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
-        die("Invalid email address.");
+        die(json_encode(['success' => false, 'error' => $error]));
     }
 
     try {

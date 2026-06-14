@@ -2,6 +2,8 @@ name: PR Size Labeler
 on: [pull_request_target]
 
 permissions:
+  issues: write
+  pull-requests: write
   contents: read
 
 jobs:
@@ -15,3 +17,4 @@ jobs:
         uses: pascalgn/size-label-action@v0.5.0
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+

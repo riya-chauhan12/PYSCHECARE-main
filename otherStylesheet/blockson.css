@@ -92,3 +92,19 @@ body{
     color:var(--light-color);
 
 }
+
+/* Dark Mode Styles */
+body.dark-mode {
+    --light-color: #1a1a1a;
+    --dark-color: #e8e8e8;
+    --shadow-color: #333333;
+}
+
+body.dark-mode .back-to-home {
+    background-color: var(--light-color);
+}
+
+body.dark-mode .btn {
+    background-color: #bb86fc;
+    color: #000;
+}

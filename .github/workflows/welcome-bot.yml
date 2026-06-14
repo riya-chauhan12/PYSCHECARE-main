@@ -6,6 +6,8 @@ on:
     types: [opened]
 
 permissions:
+  issues: write
+  pull-requests: write
   contents: read
 
 jobs:
@@ -20,3 +22,4 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue-message: "Welcome to PsycheCare! 🎉 Thank you for opening your first issue here. A maintainer will review it shortly."
           pr-message: "Hello and welcome to PsycheCare! 🚀 Thank you for taking the time to submit your first Pull Request! We'll review your code as soon as possible."
+

@@ -38,6 +38,10 @@
                 </ul>
             </nav>
 
+            <button class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+
             <button class="hamBurger" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav" tabindex="0">
                 <div class="line line1"></div>
                 <div class="mid-line-cont">
@@ -235,5 +239,6 @@
             .catch(error => console.error('Error fetching CSRF token:', error));
     </script>
     <script src="otherJS/accessibility.js"></script>
+    <script src="otherJS/darkMode.js"></script>
 </body>
 </html>

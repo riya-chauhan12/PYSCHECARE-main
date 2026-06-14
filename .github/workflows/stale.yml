@@ -6,6 +6,8 @@ on:
   workflow_dispatch: # Allow manual trigger for testing
 
 permissions:
+  issues: write
+  pull-requests: write
   contents: read
 
 jobs:
@@ -75,3 +77,4 @@ jobs:
 
           # Limit operations per run to avoid hitting API rate limits
           operations-per-run: 100
+

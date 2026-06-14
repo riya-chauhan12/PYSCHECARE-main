@@ -9,7 +9,9 @@ on:
     - cron: '30 1 * * 1' # Runs automatically every Monday
 
 permissions:
+  actions: read
   contents: read
+  security-events: write
 
 jobs:
   analyze:
@@ -36,3 +38,4 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
+

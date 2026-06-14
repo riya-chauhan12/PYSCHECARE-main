@@ -16,6 +16,13 @@
     --font-scale: 1;
 }
 
+body.dark-mode {
+    --light-color: #1a1a1a;
+    --dark-color: #e8e8e8;
+    --shadow-color: #333333;
+    --lightvarient-darkColor: #ffffff22;
+}
+
 
 
 *{
@@ -1529,8 +1536,7 @@ p::selection{
     font-weight: 300;
 }
 
-<<<<<<< feat/attribute-working
-=======
+
 .contribution-list{
     list-style: none;
 
@@ -1623,7 +1629,6 @@ p::selection{
     }
 }
 
->>>>>>> main
 /* Adding fade-in animations for section transitions */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -1763,5 +1768,109 @@ p::selection{
 
 .delay-300 {
     animation-delay: 0.3s;
+}
+
+/* Dark Mode Toggle Button */
+.dark-mode-toggle {
+    background: none;
+    border: none;
+    font-size: 1.3em;
+    color: var(--dark-color);
+    cursor: pointer;
+    padding: 0.5em;
+    border-radius: 50%;
+    transition: all 300ms ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1em;
+}
+
+.dark-mode-toggle:hover {
+    background-color: var(--shadow-color);
+    transform: scale(1.1);
+}
+
+.dark-mode-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: var(--dark-color);
+}
+
+body.dark-mode .header {
+    background-color: var(--light-color);
+    box-shadow: 0 2px 15px rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .logo {
+    color: #bb86fc;
+}
+
+body.dark-mode .nav-ul li a {
+    color: var(--dark-color);
+}
+
+body.dark-mode .nav-ul li a:hover,
+body.dark-mode .nav-ul li a:focus {
+    background-color: var(--primary-color);
+     color: #ffffff;
+}
+
+body.dark-mode .dark-mode-toggle {
+    color: #bb86fc;
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+    background-color: rgba(187, 134, 252, 0.1);
+}
+
+body.dark-mode .mobile-view-nav-cont {
+    background-color: var(--light-color);
+}
+
+body.dark-mode .mobile-view-nav-list a {
+    color: var(--dark-color);
+}
+
+body.dark-mode .mobile-view-nav-list a:hover {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+body.dark-mode .footer {
+    background: linear-gradient(135deg, #bb86fc 0%, #7F5AF0 100%);
+}
+
+body.dark-mode .footer-text-cont {
+    border-bottom-color: rgba(232, 232, 232, 0.3);
+}
+
+body.dark-mode .footer-text-cont h2,
+body.dark-mode .footer-text-cont p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.dark-mode .login-container {
+    background-color: #2a2a2a;
+    box-shadow: 0 10px 30px rgba(187, 134, 252, 0.3);
+}
+
+body.dark-mode .form-group label {
+    color: var(--dark-color);
+}
+
+body.dark-mode .form-group input {
+    background-color: #333333;
+    color: var(--dark-color);
+    border-color: #444444;
+}
+
+body.dark-mode .form-group input:focus {
+    border-color: #bb86fc;
+    box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.1);
 }
 

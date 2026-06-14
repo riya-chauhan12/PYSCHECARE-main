@@ -326,6 +326,10 @@
                 </ul>
             </div>
 
+            <button class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+
             <div class="hamburger">
                 <div class="line line1"></div>
                 <div class="mid-line-cont">
@@ -474,7 +478,7 @@
             } else if (err === 'rate_limit') {
                 errorMsg.textContent = 'Too many attempts. Please try again in an hour.';
             } else if (err === 'weak_password') {
-                errorMsg.textContent = 'Password must be at least 8 characters.';
+                errorMsg.textContent = 'Password must be at least 8 characters and include uppercase, lowercase, a digit, and a special character.';
             } else if (err === 'db') {
                 errorMsg.textContent = 'Database error. Please try again.';
             } else {
@@ -498,6 +502,7 @@
             .catch(error => console.error('Error fetching CSRF token:', error));
     </script>
     <script src="https://kit.fontawesome.com/1b2b6a64da.js" crossorigin="anonymous"></script>
+    <script src="otherJS/darkMode.js"></script>
     <script src="otherJS/accessibility.js"></script>
 </body>
 </html>
