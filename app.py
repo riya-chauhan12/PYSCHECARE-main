@@ -7,16 +7,18 @@ import hashlib
 import hmac
 import os
 import time
-from flask import Flask, request, jsonify
+
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+
 from chatbot_integration import get_chatbot_response
-from validation import validate_chat_payload
 from crisis_detection import detect_crisis_risk, log_crisis_event
+from validation import validate_chat_payload
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024
 
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN")
 if not ALLOWED_ORIGIN:
@@ -35,23 +37,22 @@ def verify_origin():
         return jsonify({"error": "Missing Origin header"}), 403
     if origin != ALLOWED_ORIGIN:
         return jsonify({"error": "Origin not allowed"}), 403
+    return None
 
 
-limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])
+limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])  # noqa: E501
 CHAT_API_SECRET = os.environ.get("CHAT_API_SECRET", "")
 
 
 def _verify_chat_token(token: str) -> str:
-    """Validate the HMAC chat token and return the extracted session ID."""
+    """Validate chat token and return session ID."""
     if not CHAT_API_SECRET or not token or "." not in token:
         return None
 
     try:
         payload, signature = token.split(".", 1)
         expected_sig = hmac.new(
-            CHAT_API_SECRET.encode(),
-            payload.encode(),
-            hashlib.sha256
+            CHAT_API_SECRET.encode(), payload.encode(), hashlib.sha256
         ).hexdigest()
 
         if not hmac.compare_digest(expected_sig, signature):
@@ -64,10 +65,10 @@ def _verify_chat_token(token: str) -> str:
             if time.time() > int(expires):
                 return None
             return session_id
-        else:
-            session_id, _ = decoded_payload.split("|", 1)
-            return session_id
-    except Exception:
+
+        session_id, _ = decoded_payload.split("|", 1)
+        return session_id
+    except Exception:  # pylint: disable=broad-exception-caught
         return None
 
 
@@ -81,7 +82,7 @@ def chat():
     user_id = _verify_chat_token(token)
     if not user_id:
         return (
-            jsonify({"error": "Unauthorized. Please log in to use the chatbot."}),
+            jsonify({"error": "Unauthorized. Please log in to use the chatbot."}),  # noqa: E501
             401,
         )
 
@@ -99,7 +100,7 @@ def chat():
 
 @app.errorhandler(413)
 def payload_too_large(_error):
-    """Handle 413 Payload Too Large error."""
+    """Handle 413 error."""
     return jsonify({"error": "Request body is too large."}), 413
 
 
@@ -115,6 +116,8 @@ if __name__ == "__main__":
     import logging
 
     logging.warning(
-        "You are using the development server. For production, use wsgi.py to ensure bounded thread scaling and prevent memory leaks."
+        "You are using the development server. For production, "
+        "use wsgi.py to ensure bounded thread scaling and "
+        "prevent memory leaks."
     )
     app.run(host="0.0.0.0", port=5000, debug=debug_mode)
