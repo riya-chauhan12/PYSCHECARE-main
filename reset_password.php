@@ -65,6 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         ->execute([':token_hash' => $tokenHash]);
 
     session_regenerate_id(true);
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     header("Location: login.html?password_reset=1");
     exit();
 }

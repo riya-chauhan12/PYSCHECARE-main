@@ -22,7 +22,9 @@ if (!isset($_SESSION['username'])) {
 $secret       = getenv('CHAT_API_SECRET') ?: 'change-me-in-production';
 $session_id   = session_id();
 $username     = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
-$payload      = base64_encode($session_id . '|' . $username);
+$ip           = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$expires      = time() + 3600;
+$payload      = base64_encode($session_id . '|' . $username . '|' . $ip . '|' . $expires);
 $signature    = hash_hmac('sha256', $payload, $secret);
 $chat_token   = $payload . '.' . $signature;
 

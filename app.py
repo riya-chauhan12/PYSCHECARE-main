@@ -53,8 +53,16 @@ def _verify_chat_token(token: str) -> str:
             return None
 
         decoded_payload = base64.b64decode(payload).decode("utf-8")
-        session_id, username = decoded_payload.split("|", 1)
-        return session_id
+        parts = decoded_payload.split("|")
+        if len(parts) == 4:
+            session_id, username, ip, expires = parts
+            import time
+            if time.time() > int(expires):
+                return None
+            return session_id
+        else:
+            session_id, username = decoded_payload.split("|", 1)
+            return session_id
     except Exception:
         return None
 
