@@ -17,7 +17,7 @@ const BOT_NAME = "Arya Assistant";
 const PERSON_NAME = "You";
 
 // Server endpoint for the chatbot
-const CHATBOT_ENDPOINT = "http://localhost:5000/get";
+const CHATBOT_ENDPOINT = window.CHATBOT_SERVER_URL || "/get";
 
 function setupChatForm() {
     const msgerForm = document.querySelector(".msger-inputarea");
