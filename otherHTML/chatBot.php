@@ -31,11 +31,12 @@ $chat_token   = $payload . '.' . $signature;
 // so the JavaScript can attach the token to every API request.
 $html = file_get_contents(__DIR__ . '/chatBot.html');
 
+$user_js = isset($_SESSION['username']) ? js($username) : 'null';
 // Inject window config right before </head>
 $injection = <<<JS
     <script>
         // Injected by chatBot.php — DO NOT expose or log these values
-        window.PSYCHECARE_USER    = {$_SESSION['username'] ? js($username) : 'null'};
+        window.PSYCHECARE_USER    = {$user_js};
         window.PSYCHECARE_TOKEN   = "{$chat_token}";
     </script>
 JS;
