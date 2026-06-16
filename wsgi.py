@@ -1,3 +1,7 @@
+"""
+WSGI entry point for production deployment.
+"""
+
 import logging
 import os
 import sys

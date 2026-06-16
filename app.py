@@ -1,7 +1,12 @@
+"""
+Main application file for PsycheCare Chat API.
+"""
+
 import base64
-import hmac
 import hashlib
+import hmac
 import os
+import time
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -24,6 +29,7 @@ CORS(app, origins=[ALLOWED_ORIGIN])
 
 @app.before_request
 def verify_origin():
+    """Verify that the Origin header matches ALLOWED_ORIGIN."""
     origin = request.headers.get("Origin")
     if not origin:
         return jsonify({"error": "Missing Origin header"}), 403
@@ -54,13 +60,12 @@ def _verify_chat_token(token: str) -> str:
         decoded_payload = base64.b64decode(payload).decode("utf-8")
         parts = decoded_payload.split("|")
         if len(parts) == 4:
-            session_id, username, ip, expires = parts
-            import time
+            session_id, _username, _ip, expires = parts
             if time.time() > int(expires):
                 return None
             return session_id
         else:
-            session_id, username = decoded_payload.split("|", 1)
+            session_id, _ = decoded_payload.split("|", 1)
             return session_id
     except Exception:
         return None
@@ -69,6 +74,7 @@ def _verify_chat_token(token: str) -> str:
 @app.route("/chat", methods=["POST"])
 @limiter.limit("30 per minute")
 def chat():
+    """Handle chat requests and return chatbot responses."""
     auth_header = request.headers.get("Authorization", "")
     token = auth_header.removeprefix("Bearer ").strip()
 
@@ -92,12 +98,14 @@ def chat():
 
 
 @app.errorhandler(413)
-def payload_too_large(error):
+def payload_too_large(_error):
+    """Handle 413 Payload Too Large error."""
     return jsonify({"error": "Request body is too large."}), 413
 
 
 @app.errorhandler(400)
-def bad_request(error):
+def bad_request(_error):
+    """Handle 400 Bad Request error."""
     return jsonify({"error": "Invalid request."}), 400
 
 
