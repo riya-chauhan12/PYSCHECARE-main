@@ -12,7 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validate CSRF token
     if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
         http_response_code(403);
-        die("Invalid CSRF token.");
+        header('Content-Type: application/json');
+        die(json_encode(['success' => false, 'error' => 'Invalid CSRF token.']));
     }
 
     $name = trim($_POST['name'] ?? '');
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = validateContactInput($name, $email, $subject, $message);
     if ($error !== null) {
         http_response_code(400);
+        header('Content-Type: application/json');
         die(json_encode(['success' => false, 'error' => $error]));
     }
 
@@ -33,7 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '';
         if (!enforceRateLimit($db, "contact:" . $ip, 5, 60)) {
             http_response_code(429);
-            die("Too many contact attempts. Please try again later.");
+            header('Content-Type: application/json');
+            die(json_encode(['success' => false, 'error' => 'Too many contact attempts. Please try again later.']));
         }
 
         $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message) VALUES (:name, :email, :subject, :message)");
@@ -44,9 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':message' => $message
         ]);
 
-        echo "Message received. Thank you, " . htmlspecialchars($name, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "!";
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => "Message received. Thank you, " . htmlspecialchars($name, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "!"
+        ]);
     } catch (PDOException $e) {
         http_response_code(500);
+        header('Content-Type: application/json');
         echo json_encode(['success' => false, 'error' => 'Database error. Please try again later.']);
     }
 }
