@@ -1,18 +1,24 @@
+"""
+Main application file for PsycheCare Chat API.
+"""
+
 import base64
-import hmac
 import hashlib
+import hmac
 import os
-import uuid
-from flask import Flask, request, jsonify
+import time
+
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+
 from chatbot_integration import get_chatbot_response
-from validation import validate_chat_payload
 from crisis_detection import detect_crisis_risk, log_crisis_event
+from validation import validate_chat_payload
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024
 
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN")
 if not ALLOWED_ORIGIN:
@@ -25,51 +31,60 @@ CORS(app, origins=[ALLOWED_ORIGIN])
 
 @app.before_request
 def verify_origin():
+    """Verify that the Origin header matches ALLOWED_ORIGIN."""
     origin = request.headers.get("Origin")
     if not origin:
         return jsonify({"error": "Missing Origin header"}), 403
     if origin != ALLOWED_ORIGIN:
         return jsonify({"error": "Origin not allowed"}), 403
+    return None
 
 
-limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])
+limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])  # noqa: E501
 CHAT_API_SECRET = os.environ.get("CHAT_API_SECRET", "")
 
 
 def _verify_chat_token(token: str) -> str:
-    """Validate the HMAC chat token and return the extracted session ID."""
+    """Validate chat token and return session ID."""
     if not CHAT_API_SECRET or not token or "." not in token:
         return None
 
     try:
         payload, signature = token.split(".", 1)
         expected_sig = hmac.new(
-            CHAT_API_SECRET.encode(),
-            payload.encode(),
-            hashlib.sha256
+            CHAT_API_SECRET.encode(), payload.encode(), hashlib.sha256
         ).hexdigest()
 
         if not hmac.compare_digest(expected_sig, signature):
             return None
 
         decoded_payload = base64.b64decode(payload).decode("utf-8")
-        session_id, username = decoded_payload.split("|", 1)
+        parts = decoded_payload.split("|")
+        if len(parts) == 4:
+            session_id, _username, _ip, expires = parts
+            if time.time() > int(expires):
+                return None
+            return session_id
+
+        session_id, _ = decoded_payload.split("|", 1)
         return session_id
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return None
 
 
 @app.route("/chat", methods=["POST"])
 @limiter.limit("30 per minute")
 def chat():
+    """Handle chat requests and return chatbot responses."""
     auth_header = request.headers.get("Authorization", "")
     token = auth_header.removeprefix("Bearer ").strip()
 
     user_id = _verify_chat_token(token)
     if not user_id:
-        return jsonify({
-            "error": "Unauthorized. Please log in to use the chatbot."
-        }), 401
+        return (
+            jsonify({"error": "Unauthorized. Please log in to use the chatbot."}),  # noqa: E501
+            401,
+        )
 
     data = request.get_json(silent=True)
     validation_error = validate_chat_payload(data)
@@ -84,15 +99,25 @@ def chat():
 
 
 @app.errorhandler(413)
-def payload_too_large(error):
+def payload_too_large(_error):
+    """Handle 413 error."""
     return jsonify({"error": "Request body is too large."}), 413
 
 
 @app.errorhandler(400)
-def bad_request(error):
+def bad_request(_error):
+    """Handle 400 Bad Request error."""
     return jsonify({"error": "Invalid request."}), 400
 
 
 if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    # Provide a warning that app.run is insecure for production
+    import logging
+
+    logging.warning(
+        "You are using the development server. For production, "
+        "use wsgi.py to ensure bounded thread scaling and "
+        "prevent memory leaks."
+    )
     app.run(host="0.0.0.0", port=5000, debug=debug_mode)

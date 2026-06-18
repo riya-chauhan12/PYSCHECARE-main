@@ -72,6 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Automatically log in user after successful signup
         session_regenerate_id(true);
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         $_SESSION["user_id"] = $db->lastInsertId();
         $_SESSION["username"] = $username;
         header("Location: welcome.php");
