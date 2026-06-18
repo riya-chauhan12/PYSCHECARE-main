@@ -2,13 +2,32 @@
 require_once __DIR__ . '/session_config.php';
 session_start();
 
-if (!isset($_SESSION["username"])) {
+require_once __DIR__ . '/database.php';
+
+// Strict session check
+if (!isset($_SESSION["username"]) || !isset($_SESSION["user_id"])) {
     header("Location: login.html");
     exit();
 }
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Securely fetch user profile enforcing IDOR protections
+$profileData = null;
+try {
+    $db = getAuthDatabase();
+    
+    // The requesting user ID is taken strictly from the secure session, NOT from user input!
+    // This prevents malicious actors from tampering with request parameters to access other users.
+    $currentUserId = (int)$_SESSION["user_id"];
+    
+    // We enforce that the user can only fetch their own ID
+    $profileData = getUserProfileSecure($db, $currentUserId, $currentUserId);
+} catch (Exception $e) {
+    // Handle potential IDOR or DB errors securely without leaking info
+    $profileData = null;
 }
 ?>
 <!DOCTYPE html>
@@ -181,6 +200,13 @@ if (empty($_SESSION['csrf_token'])) {
         <div class="welcome-card">
             <div class="welcome-badge">Signed in successfully</div>
             <h1 class="welcome-title">Welcome, <span><?php echo htmlspecialchars($_SESSION["username"]); ?></span></h1>
+            
+            <?php if ($profileData): ?>
+            <p class="welcome-text" style="font-size: 0.95rem; margin-top: 0.5rem; opacity: 0.9;">
+                <strong>Secure Profile Active:</strong> Logged in securely as <?php echo htmlspecialchars($profileData['email']); ?>.
+            </p>
+            <?php endif; ?>
+
             <p class="welcome-text">
                 You are now inside PsycheCare. Explore the chatbot, browse wellness resources, and continue your
                 mental health journey from one place.

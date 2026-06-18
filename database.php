@@ -94,3 +94,50 @@ function clearAccountLock(PDO $db, int $userId): void
         UPDATE users SET failed_attempts = 0, locked_until = 0 WHERE id = :id
     ")->execute([':id' => $userId]);
 }
+
+// ── Profile and IDOR Protection ─────────────────────────────────────────────
+
+function getUserProfileSecure(PDO $db, int $targetUserId, int $requestingUserId): ?array
+{
+    // IDOR Protection: Ensure the user requesting the profile is the owner
+    // This strict ownership validation layer prevents unauthorized access.
+    if ($targetUserId !== $requestingUserId) {
+        // Log this unauthorized access attempt securely
+        error_log("IDOR Attack Prevented: User $requestingUserId attempted to access profile $targetUserId");
+        throw new Exception("Unauthorized access to user profile. IDOR protection triggered.");
+    }
+
+    $stmt = $db->prepare('SELECT id, username, email, created_at FROM users WHERE id = :id');
+    $stmt->execute([':id' => $targetUserId]);
+    $row = $stmt->fetch();
+    
+    if (!$row) {
+        return null;
+    }
+    
+    return [
+        'id' => $row['id'],
+        'username' => $row['username'],
+        'email' => $row['email'],
+        'joined' => $row['created_at'] ?? 'Unknown'
+    ];
+}
+
+function updateProfileEmailSecure(PDO $db, int $targetUserId, int $requestingUserId, string $newEmail): bool
+{
+    // Strict ownership validation to prevent IDOR on profile updates
+    if ($targetUserId !== $requestingUserId) {
+        error_log("IDOR Attack Prevented: User $requestingUserId attempted to update profile $targetUserId");
+        return false;
+    }
+
+    if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+
+    $stmt = $db->prepare('UPDATE users SET email = :email WHERE id = :id');
+    return $stmt->execute([
+        ':email' => $newEmail,
+        ':id' => $targetUserId
+    ]);
+}
