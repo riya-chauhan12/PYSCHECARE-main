@@ -119,17 +119,26 @@ pip install -r requirements.txt
 
 ### Configure Environment Variables
 
-The server requires environment variables to start. Create a `.env` file in the root directory by copying `.env.example`:
+The server requires specific environment variables to run securely. Create a `.env` file in the root directory by copying the example file:
 
-```bash
-cp .env.example .env
-```
+*   **Linux/macOS/Git Bash**:
+    ```bash
+    cp .env.example .env
+    ```
+*   **Windows (Command Prompt)**:
+    ```cmd
+    copy .env.example .env
+    ```
+*   **Windows (PowerShell)**:
+    ```powershell
+    Copy-Item .env.example .env
+    ```
 
-Make sure the following variables are defined in `.env`:
-*   `ALLOWED_ORIGIN`: The origin allowed to connect via CORS (e.g., `http://localhost`).
-*   `CHAT_API_SECRET`: A secure random secret key used for signing chat session tokens.
+Open the newly created `.env` file and configure the following variables:
+*   `ALLOWED_ORIGIN`: The client application's origin URL allowed to make requests via CORS (e.g., `http://localhost:8000` or `http://localhost`).
+*   `CHAT_API_SECRET`: A secure, random string/key used for signing and validating chat session tokens.
 
-> ⚠️ **IMPORTANT**: The Flask server will raise a fatal `ValueError` and refuse to start if `ALLOWED_ORIGIN` is not set.
+> ⚠️ **IMPORTANT**: The Flask server will raise a fatal `ValueError` and fail to start if the `ALLOWED_ORIGIN` environment variable is not defined.
 
 ### Start Application
 

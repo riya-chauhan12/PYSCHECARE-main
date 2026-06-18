@@ -38,6 +38,9 @@ npx serve .
 
 # 4. For the chatbot backend (Python):
 pip install -r requirements.txt
+# Copy the env template (use 'cp .env.example .env' on Unix/macOS/Git Bash or 'copy .env.example .env' on Windows CMD)
+cp .env.example .env
+# Open .env and configure ALLOWED_ORIGIN and CHAT_API_SECRET before running:
 python app.py
 ```
 

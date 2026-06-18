@@ -55,6 +55,16 @@ function runMigrations(): void
         )"
     );
 
+    $db->exec(
+        "CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            token_hash TEXT NOT NULL UNIQUE,
+            expires_at INTEGER NOT NULL,
+            used INTEGER NOT NULL DEFAULT 0
+        )"
+    );
+
     echo "Migrations completed successfully.\n";
 }
 

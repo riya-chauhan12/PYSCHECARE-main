@@ -22,3 +22,12 @@ CREATE TABLE IF NOT EXISTS rate_limiting (
     last_attempt INTEGER DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0
+);
+
+
