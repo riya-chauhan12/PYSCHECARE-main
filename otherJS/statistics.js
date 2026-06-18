@@ -89,15 +89,12 @@ for(let i=0;i<data.length;i++){
 // random Color picker
 
 var colorHexCodeLetter=[1,2,3,4,5,6,7,8,9,0,'a','b','c','d','e','f'];
-var colorString='#';
-var randomNum;
 
 function randomColorPicker(){
-    colorString="";
+    let colorString='#';
     for(let i=0;i<6;i++){
-        randomNum=Math.floor(Math.random()*colorHexCodeLetter.length);
+        let randomNum=Math.floor(Math.random()*colorHexCodeLetter.length);
         colorString+=`${colorHexCodeLetter[randomNum]}`
-    
     }
 
     return colorString;
@@ -120,7 +117,7 @@ function updateChart(SelectedcountryName){
 
         if(data[i]['label']===SelectedcountryName){
 
-            data[i]["borderColor"]=`#${randomColorPicker()}`;
+            data[i]["borderColor"]=randomColorPicker();
             data[i].borderWidth= 2;
             data[i].tension=0;
             data[i].backgroundColor='transparent';

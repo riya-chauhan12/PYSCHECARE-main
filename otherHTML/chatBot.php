@@ -19,10 +19,16 @@ if (!isset($_SESSION['username'])) {
 // User is authenticated — inject their username and a signed chat token
 // The chat token is a one-time HMAC derived from the session ID and a server secret.
 // It is passed to the browser and sent as an Authorization header on every API call.
-$secret       = getenv('CHAT_API_SECRET') ?: 'change-me-in-production';
+$secret       = getenv('CHAT_API_SECRET');
+if (!$secret) {
+    http_response_code(500);
+    die('Server configuration error: CHAT_API_SECRET environment variable is not set.');
+}
 $session_id   = session_id();
 $username     = htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8');
-$payload      = base64_encode($session_id . '|' . $username);
+$ip           = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$expires      = time() + 3600;
+$payload      = base64_encode($session_id . '|' . $username . '|' . $ip . '|' . $expires);
 $signature    = hash_hmac('sha256', $payload, $secret);
 $chat_token   = $payload . '.' . $signature;
 
