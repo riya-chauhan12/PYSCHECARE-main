@@ -6,7 +6,6 @@ import base64
 import hashlib
 import hmac
 import os
-import time
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -40,7 +39,9 @@ def verify_origin():
     return None
 
 
-limiter = Limiter(get_remote_address, app=app, default_limits=["30 per minute"])  # noqa: E501
+limiter = Limiter(
+    get_remote_address, app=app, default_limits=["30 per minute"]
+)  # noqa: E501
 CHAT_API_SECRET = os.environ.get("CHAT_API_SECRET", "")
 
 
@@ -59,13 +60,6 @@ def _verify_chat_token(token: str) -> str:
             return None
 
         decoded_payload = base64.b64decode(payload).decode("utf-8")
-        parts = decoded_payload.split("|")
-        if len(parts) == 4:
-            session_id, _username, _ip, expires = parts
-            if time.time() > int(expires):
-                return None
-            return session_id
-
         session_id, _ = decoded_payload.split("|", 1)
         return session_id
     except Exception:  # pylint: disable=broad-exception-caught
@@ -82,7 +76,9 @@ def chat():
     user_id = _verify_chat_token(token)
     if not user_id:
         return (
-            jsonify({"error": "Unauthorized. Please log in to use the chatbot."}),  # noqa: E501
+            jsonify(
+                {"error": "Unauthorized. Please log in to use the chatbot."}
+            ),  # noqa: E501
             401,
         )
 

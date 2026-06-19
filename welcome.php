@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/session_config.php';
+require_once __DIR__ . '/sanitize.php';
 session_start();
 
 require_once __DIR__ . '/database.php';
@@ -161,7 +162,7 @@ try {
                     <li><a href="contact.html">CONTACT</a></li>
                     <li>
                         <form method="POST" action="logout.php" class="logout-form">
-                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                            <input type="hidden" name="csrf_token" value="<?php echo attr($_SESSION['csrf_token']); ?>">
                             <button type="submit" class="logout-btn">LOGOUT</button>
                         </form>
                     </li>
@@ -199,14 +200,7 @@ try {
     <div class="welcome-wrap">
         <div class="welcome-card">
             <div class="welcome-badge">Signed in successfully</div>
-            <h1 class="welcome-title">Welcome, <span><?php echo htmlspecialchars($_SESSION["username"]); ?></span></h1>
-            
-            <?php if ($profileData): ?>
-            <p class="welcome-text" style="font-size: 0.95rem; margin-top: 0.5rem; opacity: 0.9;">
-                <strong>Secure Profile Active:</strong> Logged in securely as <?php echo htmlspecialchars($profileData['email']); ?>.
-            </p>
-            <?php endif; ?>
-
+            <h1 class="welcome-title">Welcome, <span><?php echo e($_SESSION["username"]); ?></span></h1>
             <p class="welcome-text">
                 You are now inside PsycheCare. Explore the chatbot, browse wellness resources, and continue your
                 mental health journey from one place.

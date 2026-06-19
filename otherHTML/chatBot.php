@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../session_config.php';
+require_once __DIR__ . '/../sanitize.php';
 /**
  * chatBot.php — Authentication gateway for the PsycheCare chatbot page.
  *
