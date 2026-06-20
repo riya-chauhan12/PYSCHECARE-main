@@ -24,6 +24,8 @@ var alldata=[
     }
 ];
 
+const DEFAULT_COUNTRIES = ['United States', 'United Kingdom', 'World'];
+
 
 // +++++++++++++++++++++++++ ADDING CHART ++++++++++++++++++++++++++++++++++++
 
@@ -129,6 +131,7 @@ function updateChart(SelectedcountryName){
     }
 
     myChart.update();
+    refreshRemoveDropdown();
 }
 
 
@@ -148,38 +151,53 @@ function addCountry(countryName){
 // ++++++++++++++++++++++++++++ REMOVE COUNTRY FROM CHART +++++++++++++++++++++++++++
 
 
-const removeCountryBtn=document.querySelector('.remove-country-btn');
+const removeCountryDropdown = document.querySelector('#remove-country-dropDown');
 
 const errorBtn=document.querySelector('.error-btn');
 const wholeChartCont=document.querySelector('.whole-staticstics-cont');
 const errorMsgCont=document.querySelector('.error-msg-cont');
 
 
-function removeCountryFromChart(){
-
-    if(alldata.length!==0){
-        alldata.pop();
-    
-        try{
-            myChart.update();
-        }catch(err){
-            wholeChartCont.classList.add('blur-background');
-            errorMsgCont.style.display="block";
-    
-            errorBtn.addEventListener('click',()=>{
-                window.location.reload();
-            })
-
+function refreshRemoveDropdown() {
+    removeCountryDropdown.innerHTML = '<option value="none">Remove Country</option>';
+    alldata.forEach(d => {
+        if (!DEFAULT_COUNTRIES.includes(d.label)) {
+            const option = document.createElement('option');
+            option.textContent = d.label;
+            option.setAttribute('value', d.label);
+            removeCountryDropdown.appendChild(option);
         }
-        
-    }
-    
+    });
 }
 
 
+function removeCountryFromChart(countryLabel){
 
-removeCountryBtn.addEventListener('click',()=>{
-    removeCountryFromChart();
+    const index = alldata.findIndex(d => d.label === countryLabel && !DEFAULT_COUNTRIES.includes(d.label));
+    if (index === -1) return;
+
+    alldata.splice(index, 1);
+
+    try{
+        myChart.update();
+        refreshRemoveDropdown();
+    }catch(err){
+        wholeChartCont.classList.add('blur-background');
+        errorMsgCont.style.display="block";
+    }
+
+}
+
+
+removeCountryDropdown.addEventListener('change', () => {
+    const selected = removeCountryDropdown.value;
+    if (selected !== "none") {
+        removeCountryFromChart(selected);
+    }
+});
+
+errorBtn.addEventListener('click',()=>{
+    window.location.reload();
 })
 
 
