@@ -237,13 +237,13 @@ if (!$row) {
 
             <div class="form-group">
                 <label for="password">New Password</label>
-                 <input type="password" id="password" name="password" required minlength="8" placeholder="Min 8 chars, uppercase, number &amp; symbol">
+                <input type="password" id="password" name="password" required minlength="8" placeholder="Min 8 chars, uppercase, number &amp; symbol">
                 
             </div>
 
             <div class="form-group">
                 <label for="confirm_password">Confirm Password</label>
-                <input  type="password" id="confirm_password" name="confirm_password" required minlength="8" placeholder="Re-enter password">
+                <input  type="password" id="confirm_password" name="confirm_password" required minlength="8" placeholder="Re-enter new password">
                 <p class="error-message" id="error-msg"></p>
             </div>
 
