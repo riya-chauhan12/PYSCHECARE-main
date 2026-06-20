@@ -11,6 +11,11 @@ function getAuthDatabase(): PDO
 
 function getIPAddress(): string
 {
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        // Extract the client IP from a comma-separated list of IPs
+        $ipList = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ipList[0]);
+    }
     return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 }
 
