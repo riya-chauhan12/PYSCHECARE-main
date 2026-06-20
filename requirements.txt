@@ -21,6 +21,6 @@ langdetect==1.0.9
 # Web Framework
 tensorflow>=2.16.0
 keras>=2.16.0
-numpy==1.26.2
+numpy>=1.26.2
 gunicorn==21.2.0
 waitress==3.0.0  

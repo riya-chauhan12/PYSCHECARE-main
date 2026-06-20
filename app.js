@@ -133,6 +133,9 @@ smallCrads.forEach((card, index) => {
 
 
 
+// Back to Top Button Behavior
+const backToTopBtn = document.querySelector('.back-to-top');
+
 window.addEventListener('scroll',()=>{
     if (window.scrollY === 0) {
         cards.forEach((card)=>{
@@ -143,7 +146,25 @@ window.addEventListener('scroll',()=>{
             card.classList.remove('appear');
         })
     }
+
+    if (backToTopBtn) {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.add('show');
+        } else {
+            backToTopBtn.classList.remove('show');
+        }
+    }
 })
+
+if (backToTopBtn) {
+    backToTopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
 
 
 // //// Page reload
